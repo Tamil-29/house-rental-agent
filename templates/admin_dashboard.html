@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - House Rental Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-2 border-bottom">
+        <div>
+            <h1 class="h3 fw-bold mb-1"><i class="bi bi-shield-check text-danger"></i> Administrator Dashboard</h1>
+            <p class="text-muted mb-0">System overview, user management, property listing moderation, and request monitoring.</p>
+        </div>
+        <div class="mt-3 mt-md-0 d-flex gap-2">
+            <a href="{{ url_for('admin_requests') }}" class="btn btn-outline-primary" id="btn-admin-view-all-reqs">
+                <i class="bi bi-clipboard-data me-1"></i> View All Rental Requests
+            </a>
+        </div>
+    </div>
+
+    <!-- 7 Required Admin Statistics Cards -->
+    <div class="row g-3 mb-4">
+        <!-- 1. Total Users -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-dark text-white">
+                    <i class="bi bi-people"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-total-users">{{ stats.total_users }}</div>
+                    <div class="stat-label">Total Users</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Total Owners -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary text-white">
+                    <i class="bi bi-building"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-total-owners">{{ stats.total_owners }}</div>
+                    <div class="stat-label">Total Owners</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. Total Tenants -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-info text-white">
+                    <i class="bi bi-person-walking"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-total-tenants">{{ stats.total_tenants }}</div>
+                    <div class="stat-label">Total Tenants</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Total Houses -->
+        <div class="col-sm-6 col-lg-3">
+            <div class="stat-card">
+                <div class="stat-icon bg-secondary text-white">
+                    <i class="bi bi-houses"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-total-houses">{{ stats.total_houses }}</div>
+                    <div class="stat-label">Total Houses</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Available Houses -->
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-success text-white">
+                    <i class="bi bi-check-circle"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-available-houses">{{ stats.available_houses }}</div>
+                    <div class="stat-label">Available Houses</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Rented Houses -->
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-purple text-white" style="background-color: #7c3aed;">
+                    <i class="bi bi-key-fill"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-rented-houses">{{ stats.rented_houses }}</div>
+                    <div class="stat-label">Rented Houses</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 7. Pending Requests -->
+        <div class="col-sm-6 col-lg-4">
+            <div class="stat-card">
+                <div class="stat-icon bg-warning text-dark">
+                    <i class="bi bi-hourglass-top"></i>
+                </div>
+                <div>
+                    <div class="stat-val" id="stat-pending-requests">{{ stats.pending_requests }}</div>
+                    <div class="stat-label">Pending Requests</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 1: All Houses Management Table -->
+    <div class="card border-0 shadow-sm rounded-4 mb-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-house-gear text-primary me-2"></i> Manage House Listings</h5>
+            <span class="badge bg-light text-dark border">{{ houses|length }} Listed</span>
+        </div>
+        <div class="card-body p-0">
+            {% if houses %}
+                <div class="table-responsive">
+                    <table class="table custom-table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>House Title</th>
+                                <th>Owner</th>
+                                <th>Location</th>
+                                <th>Rent</th>
+                                <th>Status</th>
+                                <th>Approval Status</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for house in houses %}
+                                <tr>
+                                    <td><span class="fw-bold text-muted">#{{ house.id }}</span></td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <img src="{{ url_for('static', filename='images/' + (house.image if house.image else 'default_house.jpg')) }}" 
+                                                 alt="{{ house.title }}" 
+                                                 class="rounded-2" 
+                                                 style="width: 45px; height: 35px; object-fit: cover;"
+                                                 onerror="this.src='{{ url_for('static', filename='images/default_house.jpg') }}'">
+                                            <a href="{{ url_for('house_details', house_id=house.id) }}" class="fw-bold text-dark text-decoration-none">
+                                                {{ house.title }}
+                                            </a>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">{{ house.owner_name }}</div>
+                                        <small class="text-muted"><i class="bi bi-envelope"></i> {{ house.owner_email }}</small>
+                                    </td>
+                                    <td><small class="text-muted">{{ house.location }}</small></td>
+                                    <td><span class="fw-bold text-primary">₹{{ "{:,.0f}".format(house.rent) }}</span></td>
+                                    <td>
+                                        <span class="badge {% if house.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %}">
+                                            {{ house.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if house.approved %}
+                                            <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                                                <i class="bi bi-check-circle"></i> Approved
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                                                <i class="bi bi-clock"></i> Pending
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end">
+                                        <div class="d-flex justify-content-end gap-1">
+                                            <!-- Approve / Revoke Button -->
+                                            <form action="{{ url_for('admin_toggle_approval', house_id=house.id) }}" method="POST" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm {% if house.approved %}btn-outline-warning{% else %}btn-outline-success{% endif %}" title="{% if house.approved %}Revoke Approval{% else %}Approve Listing{% endif %}" id="admin-toggle-approval-{{ house.id }}">
+                                                    {% if house.approved %}<i class="bi bi-x-circle"></i> Revoke{% else %}<i class="bi bi-check2-circle"></i> Approve{% endif %}
+                                                </button>
+                                            </form>
+                                            <!-- Remove / Delete Listing -->
+                                            <form action="{{ url_for('admin_delete_house', house_id=house.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to remove this house listing permanently?');" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove Listing" id="admin-delete-house-{{ house.id }}">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">No houses registered in the system yet.</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Section 2: All Users Management Table -->
+    <div class="card border-0 shadow-sm rounded-4">
+        <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+            <h5 class="fw-bold mb-0"><i class="bi bi-people-fill text-primary me-2"></i> Manage Registered Users</h5>
+            <span class="badge bg-light text-dark border">{{ users|length }} Users</span>
+        </div>
+        <div class="card-body p-0">
+            {% if users %}
+                <div class="table-responsive">
+                    <table class="table custom-table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>#ID</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Role</th>
+                                <th>Registered On</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                                <tr>
+                                    <td><span class="fw-bold text-muted">#{{ user.id }}</span></td>
+                                    <td>
+                                        <div class="fw-bold text-dark">{{ user.name }}</div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.phone }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if user.role == 'admin' %}bg-danger
+                                            {% elif user.role == 'owner' %}bg-primary
+                                            {% else %}bg-success{% endif %} user-badge">
+                                            {{ user.role }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted">{{ user.created_at.strftime('%d %b %Y') if user.created_at else 'N/A' }}</small>
+                                    </td>
+                                    <td class="text-end">
+                                        {% if user.id != session.get('user_id') and user.role != 'admin' %}
+                                            <form action="{{ url_for('admin_delete_user', user_id=user.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete user {{ user.name }}? This will also remove their associated listings or requests.');" style="display:inline;">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete User" id="admin-delete-user-{{ user.id }}">
+                                                    <i class="bi bi-trash"></i> Delete
+                                                </button>
+                                            </form>
+                                        {% else %}
+                                            <span class="badge bg-light text-muted border">System User</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-4 text-muted">No users registered yet.</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

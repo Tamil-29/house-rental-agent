@@ -1,0 +1,245 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit House - House Rental Agent{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('owner_dashboard') }}">Owner Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Edit House</li>
+                </ol>
+            </nav>
+
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h4 class="fw-bold mb-0 text-primary">
+                        <i class="bi bi-pencil-square me-2"></i> Edit Property Listing
+                    </h4>
+                    <span class="badge bg-light text-dark border">House ID: #{{ house.id }}</span>
+                </div>
+                <div class="card-body p-4">
+                    <form action="{{ url_for('edit_house', house_id=house.id) }}" method="POST" enctype="multipart/form-data" id="editHouseForm">
+                        
+                        <!-- House Title -->
+                        <div class="mb-3">
+                            <label for="title" class="form-label fw-semibold">House Title <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="title" name="title" value="{{ house.title }}" required>
+                        </div>
+
+                        <!-- Location and Furnishing -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label for="location" class="form-label fw-semibold">Location / Locality <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="location" name="location" value="{{ house.location }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="furnishing" class="form-label fw-semibold">Furnishing Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="furnishing" name="furnishing" required>
+                                    <option value="Furnished" {% if house.furnishing == 'Furnished' %}selected{% endif %}>Furnished</option>
+                                    <option value="Semi-Furnished" {% if house.furnishing == 'Semi-Furnished' %}selected{% endif %}>Semi-Furnished</option>
+                                    <option value="Unfurnished" {% if house.furnishing == 'Unfurnished' %}selected{% endif %}>Unfurnished</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Address -->
+                        <div class="mb-3">
+                            <label for="address" class="form-label fw-semibold">Complete Address <span class="text-danger">*</span></label>
+                            <textarea class="form-control" id="address" name="address" rows="2" required>{{ house.address }}</textarea>
+                        </div>
+
+                        <!-- Rent and Deposit with AI Valuation Assistant -->
+                        <div class="p-3 bg-light rounded-4 border mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="fw-bold text-dark small text-uppercase letter-spacing-1">
+                                    <i class="bi bi-cash-coin text-success me-1"></i> Pricing & Deposit
+                                </span>
+                                <button type="button" class="btn btn-sm btn-outline-success rounded-pill px-3" id="btn-ai-estimate-rent" onclick="triggerAiRentValuation()">
+                                    <i class="bi bi-magic me-1"></i> ✨ AI Estimate Rent & Deposit
+                                </button>
+                            </div>
+
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label for="rentInput" class="form-label fw-semibold small">Monthly Rent (₹) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">₹</span>
+                                        <input type="number" class="form-control" id="rentInput" name="rent" value="{{ house.rent|int }}" min="500" step="100" required>
+                                    </div>
+                                    <div class="form-text small text-success d-none" id="ai-rent-hint"></div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label for="depositInput" class="form-label fw-semibold small">Security Deposit (₹) <span class="text-danger">*</span></label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-white">₹</span>
+                                        <input type="number" class="form-control" id="depositInput" name="deposit" value="{{ house.deposit|int }}" min="0" step="500" required>
+                                    </div>
+                                    <div class="form-text small text-muted d-none" id="ai-deposit-hint"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Bedrooms, Bathrooms, Status -->
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-4">
+                                <label for="bedrooms" class="form-label fw-semibold">Bedrooms (BHK) <span class="text-danger">*</span></label>
+                                <select class="form-select" id="bedrooms" name="bedrooms" required>
+                                    <option value="1" {% if house.bedrooms == 1 %}selected{% endif %}>1 BHK</option>
+                                    <option value="2" {% if house.bedrooms == 2 %}selected{% endif %}>2 BHK</option>
+                                    <option value="3" {% if house.bedrooms == 3 %}selected{% endif %}>3 BHK</option>
+                                    <option value="4" {% if house.bedrooms == 4 %}selected{% endif %}>4 BHK</option>
+                                    <option value="5" {% if house.bedrooms >= 5 %}selected{% endif %}>5+ BHK</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="bathrooms" class="form-label fw-semibold">Bathrooms <span class="text-danger">*</span></label>
+                                <select class="form-select" id="bathrooms" name="bathrooms" required>
+                                    <option value="1" {% if house.bathrooms == 1 %}selected{% endif %}>1 Bathroom</option>
+                                    <option value="2" {% if house.bathrooms == 2 %}selected{% endif %}>2 Bathrooms</option>
+                                    <option value="3" {% if house.bathrooms == 3 %}selected{% endif %}>3 Bathrooms</option>
+                                    <option value="4" {% if house.bathrooms >= 4 %}selected{% endif %}>4+ Bathrooms</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="status" class="form-label fw-semibold">Availability Status <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" name="status" required>
+                                    <option value="Available" {% if house.status == 'Available' %}selected{% endif %}>Available</option>
+                                    <option value="Rented" {% if house.status == 'Rented' %}selected{% endif %}>Rented</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Description with AI Copywriter -->
+                        <div class="mb-3">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <label for="description" class="form-label fw-semibold mb-0">Detailed Description</label>
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1" id="btn-ai-generate-desc" onclick="triggerAiListingGenerator()">
+                                    <i class="bi bi-pen-fill me-1"></i> ✨ AI Re-generate Pitch
+                                </button>
+                            </div>
+                            <textarea class="form-control" id="description" name="description" rows="4">{{ house.description }}</textarea>
+                        </div>
+
+                        <!-- House Image Upload & Current Image Preview -->
+                        <div class="mb-4">
+                            <label for="houseImageInput" class="form-label fw-semibold">Update House Image (Optional)</label>
+                            <input class="form-control" type="file" id="houseImageInput" name="image" accept="image/*">
+                            <div class="form-text">Leave empty to keep current image. Supported formats: JPG, PNG, WEBP.</div>
+                            
+                            <div class="d-flex gap-3 align-items-center mt-3">
+                                <div>
+                                    <small class="text-muted d-block mb-1">Current Image:</small>
+                                    <img src="{{ url_for('static', filename='images/' + (house.image if house.image else 'default_house.jpg')) }}" 
+                                         alt="Current Image" 
+                                         class="rounded-3 border shadow-sm" 
+                                         style="height: 110px; width: 150px; object-fit: cover;"
+                                         onerror="this.src='{{ url_for('static', filename='images/default_house.jpg') }}'">
+                                </div>
+                                <div id="previewContainer">
+                                    <small class="text-muted d-block mb-1">New Image Preview:</small>
+                                    <img id="imagePreview" src="#" alt="New Image Preview" class="rounded-3 border shadow-sm" style="height: 110px; width: 150px; display: none; object-fit: cover;">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-end gap-2 pt-3 border-top">
+                            <a href="{{ url_for('owner_dashboard') }}" class="btn btn-outline-secondary px-4 rounded-pill">Cancel</a>
+                            <button type="submit" class="btn btn-primary px-4 fw-semibold rounded-pill" id="save-edit-house-btn">
+                                <i class="bi bi-save me-1"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function triggerAiRentValuation() {
+    const loc = document.getElementById('location').value.trim();
+    const bhk = document.getElementById('bedrooms').value;
+    const baths = document.getElementById('bathrooms').value;
+    const furnish = document.getElementById('furnishing').value;
+    const btn = document.getElementById('btn-ai-estimate-rent');
+
+    if (!loc) {
+        alert('Please enter a Location / Locality first so AI can assess market rates.');
+        document.getElementById('location').focus();
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Valuating...';
+
+    try {
+        const res = await fetch('/api/ai/estimate-rent', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                location: loc,
+                bedrooms: bhk,
+                bathrooms: baths,
+                furnishing: furnish
+            })
+        });
+        const data = await res.json();
+        
+        document.getElementById('rentInput').value = data.estimated_rent;
+        const depVal = data.estimated_rent * 5;
+        document.getElementById('depositInput').value = depVal;
+
+        const hintRent = document.getElementById('ai-rent-hint');
+        hintRent.classList.remove('d-none');
+        hintRent.innerHTML = `<i class="bi bi-check-circle"></i> AI suggested ${data.recommended_rent_range} (${data.market_demand} demand in ${loc})`;
+
+        const hintDep = document.getElementById('ai-deposit-hint');
+        hintDep.classList.remove('d-none');
+        hintDep.innerHTML = `<i class="bi bi-shield-check"></i> Standard 5-month security deposit`;
+    } catch (err) {
+        alert('AI valuation error: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-magic me-1"></i> ✨ AI Estimate Rent & Deposit';
+    }
+}
+
+async function triggerAiListingGenerator() {
+    const title = document.getElementById('title').value.trim();
+    const loc = document.getElementById('location').value.trim();
+    const bhk = document.getElementById('bedrooms').value;
+    const furnish = document.getElementById('furnishing').value;
+    const btn = document.getElementById('btn-ai-generate-desc');
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Drafting...';
+
+    try {
+        const res = await fetch('/api/ai/generate-description', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                title: title || `${bhk} BHK House`,
+                location: loc,
+                bedrooms: bhk,
+                furnishing: furnish
+            })
+        });
+        const data = await res.json();
+        document.getElementById('description').value = data.description;
+    } catch (err) {
+        alert('AI Copywriter error: ' + err.message);
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-pen-fill me-1"></i> ✨ AI Re-generate Pitch';
+    }
+}
+</script>
+{% endblock %}

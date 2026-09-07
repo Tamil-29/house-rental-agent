@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ house.title }} - House Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Breadcrumb & Back -->
+    <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Home</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('houses') }}">Houses</a></li>
+            <li class="breadcrumb-item active" aria-current="page">{{ house.title }}</li>
+        </ol>
+    </nav>
+
+    <div class="row g-4">
+        <!-- Left Column: Image & Details -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                <div class="position-relative">
+                    <img src="{{ url_for('static', filename='images/' + (house.image if house.image else 'default_house.jpg')) }}" 
+                         alt="{{ house.title }}" 
+                         class="details-header-img w-100"
+                         onerror="this.src='{{ url_for('static', filename='images/default_house.jpg') }}'">
+                    
+                    <span class="badge {% if house.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %} position-absolute top-0 start-0 m-3 px-3 py-2 fs-6 rounded-pill shadow-sm">
+                        <i class="bi bi-circle-fill me-1 small"></i> {{ house.status }}
+                    </span>
+                </div>
+
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-3">
+                        <div>
+                            <h2 class="h3 fw-bold text-dark mb-1">{{ house.title }}</h2>
+                            <p class="text-muted mb-0">
+                                <i class="bi bi-geo-alt-fill text-danger me-1"></i> {{ house.location }}
+                            </p>
+                        </div>
+                        <div class="text-md-end">
+                            <span class="text-muted small d-block">Monthly Rent</span>
+                            <span class="h3 fw-bold text-primary mb-0">₹{{ "{:,.0f}".format(house.rent) }}</span>
+                            <small class="text-muted">/ month</small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Key Specs Row -->
+                    <h5 class="fw-bold mb-3">Property Overview</h5>
+                    <div class="row g-3 mb-4">
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-light text-center border">
+                                <i class="bi bi-door-open fs-3 text-primary mb-1 d-block"></i>
+                                <span class="text-muted small d-block">Bedrooms</span>
+                                <strong class="fs-6">{{ house.bedrooms }} BHK</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-light text-center border">
+                                <i class="bi bi-droplet fs-3 text-info mb-1 d-block"></i>
+                                <span class="text-muted small d-block">Bathrooms</span>
+                                <strong class="fs-6">{{ house.bathrooms }} Bath</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-light text-center border">
+                                <i class="bi bi-couch fs-3 text-success mb-1 d-block"></i>
+                                <span class="text-muted small d-block">Furnishing</span>
+                                <strong class="fs-6">{{ house.furnishing }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <div class="p-3 rounded-3 bg-light text-center border">
+                                <i class="bi bi-cash-coin fs-3 text-warning mb-1 d-block"></i>
+                                <span class="text-muted small d-block">Security Deposit</span>
+                                <strong class="fs-6">₹{{ "{:,.0f}".format(house.deposit) }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Address & Description -->
+                    <div class="mb-4">
+                        <h5 class="fw-bold mb-2"><i class="bi bi-pin-map text-danger me-1"></i> Full Address</h5>
+                        <p class="text-secondary bg-light p-3 rounded-3 border mb-0">
+                            {{ house.address }}
+                        </p>
+                    </div>
+
+                    <div class="mb-2">
+                        <h5 class="fw-bold mb-2"><i class="bi bi-card-text text-primary me-1"></i> Detailed Description</h5>
+                        <p class="text-secondary lh-lg mb-0" style="white-space: pre-line;">
+                            {{ house.description }}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Owner Information & Action Card -->
+        <div class="col-lg-4">
+            <!-- Rental Request Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3">Rental Action</h5>
+                    
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted">Monthly Rent:</span>
+                        <strong class="text-dark">₹{{ "{:,.0f}".format(house.rent) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Refundable Deposit:</span>
+                        <strong class="text-dark">₹{{ "{:,.0f}".format(house.deposit) }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-3">
+                        <span class="text-muted">Status:</span>
+                        <span class="badge {% if house.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %}">
+                            {{ house.status }}
+                        </span>
+                    </div>
+
+                    <hr>
+
+                    {% if session.get('role') == 'tenant' %}
+                        {% if user_request %}
+                            <div class="alert alert-info border mb-0 text-center">
+                                <i class="bi bi-info-circle-fill me-1"></i>
+                                You requested this house on {{ user_request.request_date.strftime('%d %b %Y') if user_request.request_date else '' }}
+                                <div class="mt-2">
+                                    Current Status: 
+                                    <span class="badge 
+                                        {% if user_request.status == 'Pending' %}bg-warning text-dark
+                                        {% elif user_request.status == 'Accepted' %}bg-success
+                                        {% else %}bg-danger{% endif %}">
+                                        {{ user_request.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% elif house.status == 'Rented' %}
+                            <div class="alert alert-secondary border mb-0 text-center">
+                                <i class="bi bi-slash-circle me-1"></i> This house is currently rented out.
+                            </div>
+                        {% else %}
+                            <form action="{{ url_for('request_house', house_id=house.id) }}" method="POST">
+                                <button type="submit" class="btn btn-success w-100 py-3 fw-bold shadow-sm" id="btn-request-house">
+                                    <i class="bi bi-send-check-fill me-1"></i> Send Rental Request
+                                </button>
+                            </form>
+                            <small class="text-muted d-block text-center mt-2">
+                                Owner will review your request and get back shortly.
+                            </small>
+                        {% endif %}
+                    {% elif session.get('role') == 'owner' %}
+                        {% if session.get('user_id') == house.owner_id %}
+                            <div class="alert alert-primary border mb-0 text-center">
+                                <i class="bi bi-person-check-fill me-1"></i> You are the owner of this house listing.
+                                <div class="mt-2">
+                                    <a href="{{ url_for('edit_house', house_id=house.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-pencil-square"></i> Edit Listing
+                                    </a>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="alert alert-light border mb-0 text-center text-muted">
+                                <i class="bi bi-info-circle"></i> Logged in as House Owner. Only Tenants can send rental requests.
+                            </div>
+                        {% endif %}
+                    {% elif session.get('role') == 'admin' %}
+                        <div class="alert alert-warning border mb-0 text-center">
+                            <i class="bi bi-shield-check me-1"></i> Admin View
+                            <div class="mt-2">
+                                <a href="{{ url_for('admin_toggle_approval', house_id=house.id) }}" class="btn btn-sm btn-outline-dark">
+                                    {% if house.approved %}Revoke Approval{% else %}Approve Listing{% endif %}
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center">
+                            <p class="text-muted small mb-3">Please sign in as a Tenant to request this rental home.</p>
+                            <a href="{{ url_for('login') }}" class="btn btn-primary w-100 py-2 fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-1"></i> Login to Request
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Agentic AI Intelligence Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 bg-gradient-ai text-white p-1">
+                <div class="card-body p-4 bg-white rounded-4 text-dark">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <span class="badge bg-primary-subtle text-primary fw-bold px-3 py-1 rounded-pill">
+                            <i class="bi bi-cpu-fill me-1"></i> Agentic AI Tools
+                        </span>
+                        <span class="small text-success fw-bold"><i class="bi bi-check-circle-fill"></i> Verified Listing</span>
+                    </div>
+                    <h6 class="fw-bold mb-2">Smart Inquirer & Comparison</h6>
+                    <p class="small text-muted mb-3">
+                        Ask the AI agent to draft an application letter, analyze neighborhood rent fairness, or compare with similar listings.
+                    </p>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-primary rounded-pill py-2" 
+                                onclick="sendCopilotQuickPrompt('Draft a polite rental inquiry for house {{ house.id }}')">
+                            <i class="bi bi-pen-fill me-1"></i> ✨ Draft Inquiry Letter
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-info rounded-pill py-2 text-dark"
+                                onclick="sendCopilotQuickPrompt('Schedule visit for house {{ house.id }} on upcoming weekend')">
+                            <i class="bi bi-calendar-check-fill me-1 text-primary"></i> 📅 Schedule Walkthrough
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill py-2"
+                                onclick="sendCopilotQuickPrompt('Compare house {{ house.id }} with other available houses')">
+                            <i class="bi bi-arrow-left-right me-1"></i> ⚖️ Compare with Similar Homes
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success rounded-pill py-2"
+                                onclick="sendCopilotQuickPrompt('Neighborhood insights and safety score for {{ house.location }}')">
+                            <i class="bi bi-geo-alt-fill me-1 text-danger"></i> 📍 Neighborhood & Safety Score
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning rounded-pill py-2 text-dark"
+                                onclick="sendCopilotQuickPrompt('Can I afford rent of {{ house.rent|int }} on my salary?')">
+                            <i class="bi bi-calculator-fill me-1 text-success"></i> 💳 Check Rent Affordability
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-dark rounded-pill py-2"
+                                onclick="sendCopilotQuickPrompt('Generate rental agreement checklist for house {{ house.id }}')">
+                            <i class="bi bi-file-earmark-text-fill me-1 text-primary"></i> 📜 Lease Agreement Checklist
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Contact Information Box -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-person-vcard text-primary me-1"></i> Owner Information</h5>
+                    
+                    <div class="owner-card">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="stat-icon bg-primary text-white" style="width: 44px; height: 44px; font-size: 1.2rem;">
+                                <i class="bi bi-person"></i>
+                            </div>
+                            <div>
+                                <h6 class="fw-bold mb-0">{{ house.owner_name }}</h6>
+                                <small class="text-muted">Registered Property Owner</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-2">
+                            <small class="text-muted d-block">Phone Number</small>
+                            <span class="fw-semibold text-dark"><i class="bi bi-telephone me-1 text-primary"></i> {{ house.owner_phone }}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Email Address</small>
+                            <span class="fw-semibold text-dark"><i class="bi bi-envelope me-1 text-primary"></i> {{ house.owner_email }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

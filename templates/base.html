@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}House Rental Agent{% endblock %} | Rental Management</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}" id="nav-brand">
+                <i class="bi bi-houses-fill"></i> House Rental Agent
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}" id="nav-home">
+                            <i class="bi bi-house-door"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'houses' %}active{% endif %}" href="{{ url_for('houses') }}" id="nav-houses">
+                            <i class="bi bi-grid"></i> Houses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link btn-ai-nav rounded-pill px-3 ms-lg-2 {% if request.endpoint == 'ai_studio' %}active{% endif %}" href="{{ url_for('ai_studio') }}" id="nav-ai-studio">
+                            <i class="bi bi-robot"></i> AI Studio
+                        </a>
+                    </li>
+
+                    {% if session.get('user_id') %}
+                        {% if session.get('role') == 'owner' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'owner_dashboard' %}active{% endif %}" href="{{ url_for('owner_dashboard') }}" id="nav-owner-dash">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'add_house' %}active{% endif %}" href="{{ url_for('add_house') }}" id="nav-add-house">
+                                    <i class="bi bi-plus-circle"></i> Add House
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'owner_requests' %}active{% endif %}" href="{{ url_for('owner_requests') }}" id="nav-owner-reqs">
+                                    <i class="bi bi-inbox"></i> Rental Requests
+                                </a>
+                            </li>
+                        {% elif session.get('role') == 'tenant' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'tenant_dashboard' %}active{% endif %}" href="{{ url_for('tenant_dashboard') }}" id="nav-tenant-dash">
+                                    <i class="bi bi-person-workspace"></i> My Requests
+                                </a>
+                            </li>
+                        {% elif session.get('role') == 'admin' %}
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'admin_dashboard' %}active{% endif %}" href="{{ url_for('admin_dashboard') }}" id="nav-admin-dash">
+                                    <i class="bi bi-shield-check"></i> Admin Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.endpoint == 'admin_requests' %}active{% endif %}" href="{{ url_for('admin_requests') }}" id="nav-admin-reqs">
+                                    <i class="bi bi-clipboard-data"></i> All Requests
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    {% if session.get('user_id') %}
+                        <span class="badge 
+                            {% if session.get('role') == 'admin' %}bg-danger
+                            {% elif session.get('role') == 'owner' %}bg-primary
+                            {% else %}bg-success{% endif %} user-badge">
+                            {{ session.get('role') }}
+                        </span>
+                        <div class="dropdown">
+                            <button class="btn btn-outline-secondary dropdown-toggle btn-sm rounded-pill px-3" type="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> {{ session.get('name') }}
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                                <li>
+                                    <h6 class="dropdown-header">Signed in as <strong>{{ session.get('role')|capitalize }}</strong></h6>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{{ url_for('logout') }}" id="nav-logout">
+                                        <i class="bi bi-box-arrow-right"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary btn-sm px-3" id="nav-login">
+                            <i class="bi bi-box-arrow-in-right"></i> Login
+                        </a>
+                        <a href="{{ url_for('register') }}" class="btn btn-primary btn-sm px-3" id="nav-register">
+                            <i class="bi bi-person-plus"></i> Register
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {% if category == 'success' %}
+                            <i class="bi bi-check-circle-fill me-2"></i>
+                        {% elif category == 'danger' or category == 'error' %}
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        {% elif category == 'warning' %}
+                            <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        {% else %}
+                            <i class="bi bi-info-circle-fill me-2"></i>
+                        {% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Body Block -->
+    <main class="flex-grow-1">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container text-center">
+            <div class="row align-items-center">
+                <div class="col-md-6 text-md-start mb-2 mb-md-0">
+                    <span class="fw-bold text-primary"><i class="bi bi-houses-fill"></i> House Rental Agent</span>
+                    <span class="ms-2">| College Project DBMS & Web Technology</span>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <span>Designed for Owners, Tenants & Administrators</span>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Floating Agentic AI Copilot Widget -->
+    <div class="floating-copilot-container">
+        <button type="button" class="floating-copilot-btn" id="floating-copilot-btn" title="Open Agentic AI Copilot">
+            <span class="copilot-pulse-ring"></span>
+            <i class="bi bi-robot"></i>
+        </button>
+
+        <!-- Floating Copilot Drawer -->
+        <div class="copilot-drawer" id="floating-copilot-drawer">
+            <div class="copilot-header">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="rounded-circle bg-white text-dark d-flex align-items-center justify-content-center" style="width:32px;height:32px;font-size:1rem;">
+                        <i class="bi bi-cpu-fill text-primary"></i>
+                    </div>
+                    <div>
+                        <strong class="d-block text-white" style="font-size:0.9rem; line-height:1.2;">Rental AI Copilot</strong>
+                        <span class="text-white-50" style="font-size:0.7rem;">Autonomous ReAct Agent</span>
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-1">
+                    <a href="{{ url_for('ai_studio') }}" class="btn btn-sm btn-outline-light py-0 px-2 rounded-pill small" title="Expand to full AI Studio" style="font-size:0.75rem;">
+                        <i class="bi bi-arrows-fullscreen"></i>
+                    </a>
+                    <button type="button" class="btn btn-sm text-white-50 hover-text-white py-0 px-1" id="copilot-close-btn">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="copilot-body" id="copilot-chat-stream">
+                <div class="copilot-msg agent-msg mb-3">
+                    <div class="d-flex gap-2">
+                        <div class="copilot-avatar agent-avatar rounded-circle bg-primary-subtle text-primary d-flex align-items-center justify-content-center" style="width:28px;height:28px;flex-shrink:0;">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="copilot-bubble bg-white p-2 px-3 rounded-4 small border">
+                            <strong class="text-primary d-block mb-1">Hello! I'm your AI Copilot.</strong>
+                            Ask me to find houses, compare listings, estimate rent, or draft an inquiry for any owner.
+                            <div class="d-flex flex-wrap gap-1 mt-2">
+                                <button class="btn btn-sm btn-light border py-0 px-2 rounded-pill small" style="font-size:0.72rem;" onclick="sendCopilotQuickPrompt('Find 2BHK in Indiranagar under ₹30,000')">
+                                    🏡 Indiranagar 2BHK
+                                </button>
+                                <button class="btn btn-sm btn-light border py-0 px-2 rounded-pill small" style="font-size:0.72rem;" onclick="sendCopilotQuickPrompt('Compare house 1 and house 2')">
+                                    ⚖️ Compare 1 & 2
+                                </button>
+                                <button class="btn btn-sm btn-light border py-0 px-2 rounded-pill small" style="font-size:0.72rem;" onclick="sendCopilotQuickPrompt('Estimate rent for 2BHK in Koramangala')">
+                                    📈 Estimate Rent
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="copilot-footer">
+                <form id="copilot-chat-form">
+                    <div class="input-group input-group-sm">
+                        <input type="text" id="copilot-user-input" class="form-control rounded-start-pill px-3" placeholder="Ask AI agent..." autocomplete="off" required>
+                        <button class="btn btn-primary rounded-end-pill px-3" type="submit">
+                            <i class="bi bi-send-fill"></i>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom Script -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- Agentic AI Copilot Script -->
+    <script src="{{ url_for('static', filename='js/ai_agent.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

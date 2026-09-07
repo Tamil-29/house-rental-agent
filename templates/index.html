@@ -1,0 +1,216 @@
+{% extends 'base.html' %}
+
+{% block title %}Find Your Dream Home - House Rental Agent{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section text-center">
+    <div class="container position-relative">
+        <div class="d-inline-flex align-items-center gap-2 mb-3">
+            <span class="ai-pill-badge">
+                <i class="bi bi-stars text-warning"></i> Powered by Autonomous Agentic AI
+            </span>
+            <span class="ai-pill-badge bg-white text-dark">
+                <i class="bi bi-shield-check text-success"></i> 100% Verified Listings
+            </span>
+        </div>
+
+        <h1 class="hero-title">Find Your Perfect Rental Home with AI Intelligence</h1>
+        <p class="hero-subtitle">
+            Experience next-generation rental discovery. Chat with our autonomous ReAct AI agent to discover homes, compare properties, and estimate market rents in seconds.
+        </p>
+
+        <!-- Natural Language AI Search Bar -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8 col-md-10">
+                <div class="hero-search-box text-start">
+                    <form onsubmit="event.preventDefault(); sendCopilotQuickPrompt(document.getElementById('home-ai-search').value);" class="d-flex gap-2 align-items-center">
+                        <div class="input-group input-group-lg border-0">
+                            <span class="input-group-text bg-transparent border-0 text-primary fs-5 ps-3">
+                                <i class="bi bi-robot"></i>
+                            </span>
+                            <input type="text" id="home-ai-search" class="form-control border-0 shadow-none fs-6" 
+                                   placeholder="Ask AI: 'Find a 2BHK in Indiranagar under ₹30,000' or 'Compare house 1 & 2'..." required>
+                        </div>
+                        <button type="submit" class="btn btn-ai-nav rounded-pill px-4 py-2 text-nowrap d-flex align-items-center gap-2">
+                            <span>Ask AI Agent</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </button>
+                    </form>
+                    <div class="d-flex align-items-center gap-2 flex-wrap pt-2 px-3 border-top mt-2">
+                        <span class="small text-muted fw-semibold">Try asking:</span>
+                        <button class="btn btn-sm btn-light border rounded-pill py-0 px-2 small text-secondary" onclick="sendCopilotQuickPrompt('Find me a 2BHK in Indiranagar under 30000')">
+                            🏡 2BHK in Indiranagar &lt; ₹30k
+                        </button>
+                        <button class="btn btn-sm btn-light border rounded-pill py-0 px-2 small text-secondary" onclick="sendCopilotQuickPrompt('Compare house 1 and house 2')">
+                            ⚖️ Compare House 1 & 2
+                        </button>
+                        <button class="btn btn-sm btn-light border rounded-pill py-0 px-2 small text-secondary" onclick="sendCopilotQuickPrompt('Estimate rent for 3BHK in Koramangala Furnished')">
+                            📈 Rent in Koramangala
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if not session.get('user_id') %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('login') }}" class="btn btn-outline-light px-4 py-2 rounded-pill" id="hero-login-btn">
+                    <i class="bi bi-box-arrow-in-right"></i> Login
+                </a>
+                <a href="{{ url_for('register') }}" class="btn btn-light text-primary fw-semibold px-4 py-2 rounded-pill" id="hero-register-btn">
+                    <i class="bi bi-person-plus"></i> Register
+                </a>
+                <a href="{{ url_for('ai_studio') }}" class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-sm" id="hero-ai-btn">
+                    <i class="bi bi-cpu-fill me-1"></i> Launch AI Studio
+                </a>
+            </div>
+        {% else %}
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('ai_studio') }}" class="btn btn-warning fw-bold px-4 py-2 rounded-pill shadow-sm">
+                    <i class="bi bi-robot me-1"></i> Open AI Agent Studio
+                </a>
+                <a href="{{ url_for('houses') }}" class="btn btn-outline-light px-4 py-2 rounded-pill">
+                    <i class="bi bi-grid me-1"></i> Browse Catalog
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Available Houses Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="h3 fw-bold mb-1 text-dark">
+                    <i class="bi bi-stars text-warning"></i> Featured Available Properties
+                </h2>
+                <p class="text-muted mb-0">Browse latest verified houses ready for immediate move-in</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('ai_studio') }}" class="btn btn-outline-primary btn-sm rounded-pill px-3">
+                    <i class="bi bi-robot"></i> AI Property Hunter
+                </a>
+                <a href="{{ url_for('houses') }}" class="btn btn-primary btn-sm rounded-pill px-3" id="view-all-houses-btn">
+                    View All Houses <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+
+        {% if featured_houses %}
+            <div class="row g-4">
+                {% for house in featured_houses %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="house-card shadow-sm">
+                            <div class="house-card-img-wrapper">
+                                <img src="{{ url_for('static', filename='images/' + (house.image if house.image else 'default_house.jpg')) }}" 
+                                     alt="{{ house.title }}"
+                                     onerror="this.src='https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=600&q=80'">
+                                <span class="badge {% if house.status == 'Available' %}bg-success{% else %}bg-secondary{% endif %} house-status-badge">
+                                    {{ house.status }}
+                                </span>
+                                <span class="ai-match-badge position-absolute" style="top: 14px; right: 14px;">
+                                    <i class="bi bi-cpu-fill me-1"></i> AI Verified
+                                </span>
+                                <span class="house-rent-badge">
+                                    ₹{{ "{:,.0f}".format(house.rent) }} <small class="fw-normal">/ mo</small>
+                                </span>
+                            </div>
+                            <div class="house-card-body">
+                                <h5 class="house-card-title">{{ house.title }}</h5>
+                                <div class="house-card-location">
+                                    <i class="bi bi-geo-alt-fill text-danger"></i> {{ house.location }}
+                                </div>
+
+                                <div class="house-features">
+                                    <span><i class="bi bi-door-open text-primary"></i> {{ house.bedrooms }} BHK</span>
+                                    <span><i class="bi bi-droplet text-info"></i> {{ house.bathrooms }} Bath</span>
+                                    <span><i class="bi bi-couch text-success"></i> {{ house.furnishing }}</span>
+                                </div>
+
+                                <p class="text-muted small mb-3 flex-grow-1">
+                                    {{ house.description[:110] }}{% if house.description|length > 110 %}...{% endif %}
+                                </p>
+
+                                <div class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <small class="text-muted d-block">Deposit</small>
+                                        <span class="fw-semibold text-dark">₹{{ "{:,.0f}".format(house.deposit) }}</span>
+                                    </div>
+                                    <div class="d-flex gap-1">
+                                        <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill" 
+                                                title="Ask AI about this house"
+                                                onclick="sendCopilotQuickPrompt('Tell me about house {{ house.id }} and draft an inquiry')">
+                                            <i class="bi bi-robot"></i>
+                                        </button>
+                                        <a href="{{ url_for('house_details', house_id=house.id) }}" class="btn btn-sm btn-primary px-3 rounded-pill" id="house-details-btn-{{ house.id }}">
+                                            Details <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white rounded-4 border">
+                <i class="bi bi-house-x text-muted display-4"></i>
+                <h5 class="mt-3 text-muted">No houses currently listed as available</h5>
+                <p class="text-muted">Check back soon or browse all houses in our catalog.</p>
+                <a href="{{ url_for('houses') }}" class="btn btn-primary mt-2 rounded-pill px-4">Explore All Houses</a>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Agentic AI & Platform Features -->
+<section class="py-5 bg-white border-top">
+    <div class="container">
+        <div class="text-center mb-5">
+            <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-bold mb-2">PLATFORM ARCHITECTURE</span>
+            <h2 class="h3 fw-bold text-dark">Engineered with Autonomous Intelligence</h2>
+            <p class="text-muted">Combining full-stack DBMS reliability with multi-step ReAct Agentic AI</p>
+        </div>
+        <div class="row g-4 text-center">
+            <div class="col-md-3">
+                <div class="p-4 rounded-4 border bg-light h-100 shadow-sm transition hover-shadow-md">
+                    <div class="stat-icon bg-primary text-white mx-auto mb-3">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <h5 class="fw-bold">1. ReAct AI Agent</h5>
+                    <p class="text-muted small">Autonomous multi-step reasoning, real-time database tool execution, and property matchmaking via natural language.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 rounded-4 border bg-light h-100 shadow-sm transition hover-shadow-md">
+                    <div class="stat-icon bg-success text-white mx-auto mb-3">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h5 class="fw-bold">2. AI Rent Valuation</h5>
+                    <p class="text-muted small">Owners receive instant algorithmic rent & deposit valuations based on location tiers, furnishing, and market demand.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 rounded-4 border bg-light h-100 shadow-sm transition hover-shadow-md">
+                    <div class="stat-icon bg-info text-white mx-auto mb-3">
+                        <i class="bi bi-building-check"></i>
+                    </div>
+                    <h5 class="fw-bold">3. Owner Management</h5>
+                    <p class="text-muted small">House owners list properties, review incoming tenant rental requests, and accept or reject candidates directly.</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="p-4 rounded-4 border bg-light h-100 shadow-sm transition hover-shadow-md">
+                    <div class="stat-icon bg-danger text-white mx-auto mb-3">
+                        <i class="bi bi-shield-lock"></i>
+                    </div>
+                    <h5 class="fw-bold">4. Admin Governance</h5>
+                    <p class="text-muted small">System administrators monitor 7 platform KPIs, audit rental requests, manage listings, and supervise user accounts.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
